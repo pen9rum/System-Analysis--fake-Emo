@@ -174,11 +174,8 @@ int randomSampling(int riskPercent, const vector<string> &barcodes, mt19937 &gen
     }
 }
 
-double riskCalculate(const vector<string> &barcodes, vector<string> &invalidBarcodes)
+double riskCalculate()
 {
-
-    double flawValue = invalidBarcodes.size() / barcodes.size();
-    return flawValue;
 }
 
 int main()

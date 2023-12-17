@@ -178,7 +178,6 @@ double riskCalculate(const vector<string> &barcodes, vector<string> &invalidBarc
 {
 
     double flawValue = invalidBarcodes.size() / barcodes.size();
-    return flawValue;
 }
 
 int main()

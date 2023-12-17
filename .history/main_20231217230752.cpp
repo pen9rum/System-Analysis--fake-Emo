@@ -66,7 +66,6 @@ void printInvalidBarcodes(const vector<string> &invalidBarcodes)
         cout << "Invalid Barcode: " << barcode << "\\n";
     }
 }
-
 void sampleAndCheckBarcodes(int value, const vector<string> &barcodes, mt19937 &gen, vector<string> &invalidBarcodes)
 {
     for (int i = 0; i < value; ++i)
@@ -81,7 +80,6 @@ void sampleAndCheckBarcodes(int value, const vector<string> &barcodes, mt19937 &
         }
     }
 }
-
 string generateInvalidBarcode(mt19937 &gen)
 {
     // 分別用於生成隨機字母和數字
@@ -123,62 +121,8 @@ string generateInvalidBarcode(mt19937 &gen)
     }
 }
 
-int randomSampling(int riskPercent, const vector<string> &barcodes, mt19937 &gen, vector<string> &invalidBarcodes) // 輸入風險
+int randomSampling(int risk)
 {
-
-    double highRisk = 0.03f;
-    double mediumRisk = 0.02f;
-    double lowRisk = 0.01f;
-
-    if (riskPercent >= 0.03f)
-    {
-        for (int i = 0; i < 15; i++)
-        {
-            cout << "Second Sampling:" << endl;
-            string selectedBarcode = getRandomBarcode(barcodes, gen);
-
-            if (!isBarcodeValid(selectedBarcode))
-            {
-                cout << "Error: Invalid barcode.\\n";
-                invalidBarcodes.push_back(selectedBarcode);
-            }
-        }
-    }
-    else if (riskPercent >= 0.02f)
-    {
-        for (int i = 0; i < 10; i++)
-        {
-            cout << "Second Sampling:" << endl;
-            string selectedBarcode = getRandomBarcode(barcodes, gen);
-
-            if (!isBarcodeValid(selectedBarcode))
-            {
-                cout << "Error: Invalid barcode.\\n";
-                invalidBarcodes.push_back(selectedBarcode);
-            }
-        }
-    }
-    else
-    {
-        for (int i = 0; i < 5; i++)
-        {
-            cout << "Second Sampling:" << endl;
-            string selectedBarcode = getRandomBarcode(barcodes, gen);
-
-            if (!isBarcodeValid(selectedBarcode))
-            {
-                cout << "Error: Invalid barcode.\\n";
-                invalidBarcodes.push_back(selectedBarcode);
-            }
-        }
-    }
-}
-
-double riskCalculate(const vector<string> &barcodes, vector<string> &invalidBarcodes)
-{
-
-    double flawValue = invalidBarcodes.size() / barcodes.size();
-    return flawValue;
 }
 
 int main()

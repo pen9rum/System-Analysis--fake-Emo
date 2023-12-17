@@ -82,47 +82,6 @@ void sampleAndCheckBarcodes(int value, const vector<string> &barcodes, mt19937 &
     }
 }
 
-string generateInvalidBarcode(mt19937 &gen)
-{
-    // 分別用於生成隨機字母和數字
-    uniform_int_distribution<> charDis(0, 25);
-    uniform_int_distribution<> numDis(0, 9);
-
-    // 初始假設條碼是有效的
-    string barcode = *validManufacturers.begin() + *validBrands.begin() + string(13, '0' + numDis(gen));
-
-    // 隨機選擇錯誤類型
-    int errorType = numDis(gen) % 5;
-
-    switch (errorType)
-    {
-    case 0:                                                // 長度錯誤
-        barcode = barcode.substr(0, numDis(gen) % 17 + 1); // 隨機生成1到17長度的條碼
-        break;
-    case 1: // 生產商錯誤
-        do
-        {
-            barcode[0] = 'A' + charDis(gen);
-            barcode[1] = 'A' + charDis(gen);
-        } while (isValidManufacturer(barcode.substr(0, 2)));
-        break;
-    case 2: // 品牌錯誤
-        do
-        {
-            barcode[2] = 'A' + charDis(gen);
-            barcode[3] = 'A' + charDis(gen);
-            barcode[4] = 'A' + charDis(gen);
-        } while (isValidBrand(barcode.substr(2, 3)));
-        break;
-    case 3:                                            // 前五位包含非字母
-        barcode[charDis(gen) % 5] = '0' + numDis(gen); // 將前五位中的一位替換為數字
-        break;
-    case 4:                                                  // 最後13位包含非數字
-        barcode[5 + charDis(gen) % 13] = 'A' + charDis(gen); // 將最後13位中的一位替換為字母
-        break;
-    }
-}
-
 int randomSampling(int riskPercent, const vector<string> &barcodes, mt19937 &gen, vector<string> &invalidBarcodes) // 輸入風險
 {
 
@@ -174,11 +133,45 @@ int randomSampling(int riskPercent, const vector<string> &barcodes, mt19937 &gen
     }
 }
 
-double riskCalculate(const vector<string> &barcodes, vector<string> &invalidBarcodes)
+string generateInvalidBarcode(mt19937 &gen)
 {
+    // 分別用於生成隨機字母和數字
+    uniform_int_distribution<> charDis(0, 25);
+    uniform_int_distribution<> numDis(0, 9);
 
-    double flawValue = invalidBarcodes.size() / barcodes.size();
-    return flawValue;
+    // 初始假設條碼是有效的
+    string barcode = *validManufacturers.begin() + *validBrands.begin() + string(13, '0' + numDis(gen));
+
+    // 隨機選擇錯誤類型
+    int errorType = numDis(gen) % 5;
+
+    switch (errorType)
+    {
+    case 0:                                                // 長度錯誤
+        barcode = barcode.substr(0, numDis(gen) % 17 + 1); // 隨機生成1到17長度的條碼
+        break;
+    case 1: // 生產商錯誤
+        do
+        {
+            barcode[0] = 'A' + charDis(gen);
+            barcode[1] = 'A' + charDis(gen);
+        } while (isValidManufacturer(barcode.substr(0, 2)));
+        break;
+    case 2: // 品牌錯誤
+        do
+        {
+            barcode[2] = 'A' + charDis(gen);
+            barcode[3] = 'A' + charDis(gen);
+            barcode[4] = 'A' + charDis(gen);
+        } while (isValidBrand(barcode.substr(2, 3)));
+        break;
+    case 3:                                            // 前五位包含非字母
+        barcode[charDis(gen) % 5] = '0' + numDis(gen); // 將前五位中的一位替換為數字
+        break;
+    case 4:                                                  // 最後13位包含非數字
+        barcode[5 + charDis(gen) % 13] = 'A' + charDis(gen); // 將最後13位中的一位替換為字母
+        break;
+    }
 }
 
 int main()
