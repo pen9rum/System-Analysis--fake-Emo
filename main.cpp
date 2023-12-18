@@ -7,182 +7,115 @@
 #include <set>
 
 using namespace std;
+double calculateCategoryRisk(const string& category, const vector<string>& barcodes, const vector<string>& invalidBarcodes);
+string getCategoryCode(const string& barcode);
+string getCategoryCodeFromName(const string& categoryName);
+double calculateRiskPercent(int invalidCount, int totalCount);
 
+double calculateCategoryRisk(const string& category, const vector<string>& barcodes, const vector<string>& invalidBarcodes) {
+    int sampleNumber = 0;
+    int invalidCount = 0;
+    string categoryCode = getCategoryCodeFromName(category);
+
+    for (const string& barcode : barcodes) {
+        if (getCategoryCode(barcode) == categoryCode) {
+            sampleNumber++;
+        }
+    }
+
+    for (const string& barcode : invalidBarcodes) {
+        if (getCategoryCode(barcode) == categoryCode) {
+            invalidCount++;
+        }
+    }
+
+    return calculateRiskPercent(invalidCount, sampleNumber);
+}
+
+string getCategoryCode(const string& barcode) {
+    return barcode.length() >= 7 ? barcode.substr(5, 2) : "";
+}
+
+string getCategoryCodeFromName(const string& categoryName) {
+    if (categoryName == "Top") return "01";
+    if (categoryName == "Pants") return "02";
+    if (categoryName == "Coat") return "03";
+    if (categoryName == "Shoes") return "04";
+    if (categoryName == "Accessories") return "05";
+    return "";
+}
+
+double calculateRiskPercent(int invalidCount, int totalCount) {
+    return totalCount > 0 ? static_cast<double>(invalidCount) / totalCount : 0.0;
+}
 const set<string> validBrands = {"MHV", "DXN", "DNV", "VCS", "ILG", "OFA", "GWF", "CVF", "KIG", "QJO", "GRV", "MUX", "GIE", "KJT", "WUT"};
 const set<string> validManufacturers = {"IF", "TJ", "PL", "KI", "BW", "RG"};
 
-bool isValidManufacturer(const string &code)
-{
+bool isValidManufacturer(const string& code) {
     return validManufacturers.find(code) != validManufacturers.end();
 }
 
-bool isValidBrand(const string &code)
-{
+bool isValidBrand(const string& code) {
     return validBrands.find(code) != validBrands.end();
 }
 
-bool isBarcodeValid(const string &barcode)
-{
-    if (barcode.length() != 18)
-        return false;
-    if (!isValidManufacturer(barcode.substr(0, 2)))
-        return false;
-    if (!isValidBrand(barcode.substr(2, 3)))
-        return false;
+bool isBarcodeValid(const string& barcode) {
+    if (barcode.length() != 18) return false;
+   if (!isValidBrand(barcode.substr(0, 3))) return 2;
+    if (!isValidManufacturer(barcode.substr(3, 2))) return 3;
 
     for (int i = 0; i < 5; ++i)
-        if (!isalpha(barcode[i]))
-            return false;
+        if (!isalpha(barcode[i])) return false;
     for (int i = 5; i < 18; ++i)
-        if (!isdigit(barcode[i]))
-            return false;
+        if (!isdigit(barcode[i])) return false;
 
     return true;
 }
+int isBarcodeValid2(const string& barcode) {
+    if (barcode.length() != 18) return 1;
+     if (!isValidBrand(barcode.substr(0, 3))) return 2;  // Check first 3 characters for brand
+    if (!isValidManufacturer(barcode.substr(3, 2))) return 3;  // Check next 2 characters for manufacturer
 
-string getRandomBarcode(const vector<string> &barcodes, mt19937 &gen)
-{
+
+    for (int i = 0; i < 5; ++i)
+        if (!isalpha(barcode[i])) return 4;
+    for (int i = 5; i < 18; ++i)
+        if (!isdigit(barcode[i])) return 5;
+
+    return 6;
+}
+string getRandomBarcode(const vector<string>& barcodes, mt19937& gen) {
     uniform_int_distribution<> dis(0, barcodes.size() - 1);
     return barcodes[dis(gen)];
 }
 
-vector<string> getInvalidBarcodes(const vector<string> &barcodes)
-{
+vector<string> getInvalidBarcodes(const vector<string>& barcodes) {
     vector<string> invalidBarcodes;
-    for (const string &barcode : barcodes)
-    {
-        if (!isBarcodeValid(barcode))
-        {
+    for (const string& barcode : barcodes) {
+        if (!isBarcodeValid(barcode)) {
             invalidBarcodes.push_back(barcode);
         }
     }
     return invalidBarcodes;
 }
 
-void printInvalidBarcodes(const vector<string> &invalidBarcodes)
-{
-    for (const string &barcode : invalidBarcodes)
-    {
-        cout << "Invalid Barcode: " << barcode << "\\n";
+void printInvalidBarcodes(const vector<string>& invalidBarcodes) {
+    for (const string& barcode : invalidBarcodes) {
+        cout << "Invalid Barcode: " << barcode << "\n";
     }
 }
-
-void sampleAndCheckBarcodes(int value, const vector<string> &barcodes, mt19937 &gen, vector<string> &invalidBarcodes)
-{
-    for (int i = 0; i < value; ++i)
-    {
+void sampleAndCheckBarcodes(int value, const vector<string>& barcodes, mt19937& gen, vector<string>& invalidBarcodes) {
+    for (int i = 0; i < value; ++i) {
         string selectedBarcode = getRandomBarcode(barcodes, gen);
         cout << "Sampled Barcode: " << selectedBarcode << "\\n";
 
-        if (!isBarcodeValid(selectedBarcode))
-        {
+        if (!isBarcodeValid(selectedBarcode)) {
             cout << "Error: Invalid barcode.\\n";
             invalidBarcodes.push_back(selectedBarcode);
         }
     }
 }
-
-string generateInvalidBarcode(mt19937 &gen)
-{
-    // 分別用於生成隨機字母和數字
-    uniform_int_distribution<> charDis(0, 25);
-    uniform_int_distribution<> numDis(0, 9);
-
-    // 初始假設條碼是有效的
-    string barcode = *validManufacturers.begin() + *validBrands.begin() + string(13, '0' + numDis(gen));
-
-    // 隨機選擇錯誤類型
-    int errorType = numDis(gen) % 5;
-
-    switch (errorType)
-    {
-    case 0:                                                // 長度錯誤
-        barcode = barcode.substr(0, numDis(gen) % 17 + 1); // 隨機生成1到17長度的條碼
-        break;
-    case 1: // 生產商錯誤
-        do
-        {
-            barcode[0] = 'A' + charDis(gen);
-            barcode[1] = 'A' + charDis(gen);
-        } while (isValidManufacturer(barcode.substr(0, 2)));
-        break;
-    case 2: // 品牌錯誤
-        do
-        {
-            barcode[2] = 'A' + charDis(gen);
-            barcode[3] = 'A' + charDis(gen);
-            barcode[4] = 'A' + charDis(gen);
-        } while (isValidBrand(barcode.substr(2, 3)));
-        break;
-    case 3:                                            // 前五位包含非字母
-        barcode[charDis(gen) % 5] = '0' + numDis(gen); // 將前五位中的一位替換為數字
-        break;
-    case 4:                                                  // 最後13位包含非數字
-        barcode[5 + charDis(gen) % 13] = 'A' + charDis(gen); // 將最後13位中的一位替換為字母
-        break;
-    }
-}
-
-int randomSampling(int riskPercent, const vector<string> &barcodes, mt19937 &gen, vector<string> &invalidBarcodes) // 輸入風險
-{
-
-    double highRisk = 0.03f;
-    double mediumRisk = 0.02f;
-    double lowRisk = 0.01f;
-
-    if (riskPercent >= 0.03f)
-    {
-        for (int i = 0; i < 15; i++)
-        {
-            cout << "Second Sampling:" << endl;
-            string selectedBarcode = getRandomBarcode(barcodes, gen);
-
-            if (!isBarcodeValid(selectedBarcode))
-            {
-                cout << "Error: Invalid barcode.\\n";
-                invalidBarcodes.push_back(selectedBarcode);
-            }
-        }
-    }
-    else if (riskPercent >= 0.02f)
-    {
-        for (int i = 0; i < 10; i++)
-        {
-            cout << "Second Sampling:" << endl;
-            string selectedBarcode = getRandomBarcode(barcodes, gen);
-
-            if (!isBarcodeValid(selectedBarcode))
-            {
-                cout << "Error: Invalid barcode.\\n";
-                invalidBarcodes.push_back(selectedBarcode);
-            }
-        }
-    }
-    else
-    {
-        for (int i = 0; i < 5; i++)
-        {
-            cout << "Second Sampling:" << endl;
-            string selectedBarcode = getRandomBarcode(barcodes, gen);
-
-            if (!isBarcodeValid(selectedBarcode))
-            {
-                cout << "Error: Invalid barcode.\\n";
-                invalidBarcodes.push_back(selectedBarcode);
-            }
-        }
-    }
-}
-
-double riskCalculate(const vector<string> &barcodes, vector<string> &invalidBarcodes)
-{
-
-    double flawValue = invalidBarcodes.size() / barcodes.size();
-    return flawValue;
-}
-
-int main()
-{
+int main() {
     int value;
     cout << "Enter the number of samples: ";
     cin >> value;
@@ -190,11 +123,9 @@ int main()
     vector<string> barcodes;
     string tempBarcode;
     cout << "Enter the barcodes (enter 'done' to finish):\\n";
-    while (true)
-    {
+    while (true) {
         cin >> tempBarcode;
-        if (tempBarcode == "done")
-            break;
+        if (tempBarcode == "done") break;
         barcodes.push_back(tempBarcode);
     }
 
@@ -202,19 +133,19 @@ int main()
     mt19937 gen(rd());
     vector<string> invalidBarcodes;
 
-    for (int i = 0; i < value; ++i)
-    {
+    for (int i = 0; i < value; ++i) {
         string selectedBarcode = getRandomBarcode(barcodes, gen);
-        cout << "Sampled Barcode: " << selectedBarcode << "\\n";
+        //cout << "Sampled Barcode: " << selectedBarcode << endl;
 
-        if (!isBarcodeValid(selectedBarcode))
-        {
-            cout << "Error: Invalid barcode.\\n";
+        if (isBarcodeValid2(selectedBarcode)!=6) {
+            int k =isBarcodeValid2(selectedBarcode);
+            cout << "Error" << to_string(k) << ": Invalid barcode.\n";
+
             invalidBarcodes.push_back(selectedBarcode);
         }
     }
 
-    cout << "\\nList of invalid barcodes:\\n";
+    cout << "List of invalid barcodes:\n";
     printInvalidBarcodes(invalidBarcodes);
 
     return 0;
